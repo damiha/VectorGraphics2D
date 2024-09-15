@@ -21,3 +21,4 @@ class Tool(Enum):
     TRANSLATE = 1
     DRAW = 2
     CLOSE = 3
+    FILL = 4

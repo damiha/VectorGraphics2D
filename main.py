@@ -1,3 +1,5 @@
+from venv import create
+
 import pygame
 import sys
 import numpy as np
@@ -41,6 +43,105 @@ def get_random_offset():
 
     return initial_handle_distance * np.array([np.cos(random_angle_rad), np.sin(random_angle_rad)])
 
+def create_color_picker_popup(screen_width = WIDTH, screen_height = HEIGHT):
+    # Colors
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
+    OVERLAY = (0, 0, 0, 0)
+
+    # Popup properties
+    popup_width, popup_height = 300, 250
+    popup_x = (screen_width - popup_width) // 2
+    popup_y = (screen_height - popup_height) // 2
+    border_thickness = 2
+
+    # Slider properties
+    slider_width = 200
+    slider_height = 20
+    slider_x = popup_x + (popup_width - slider_width) // 2
+    slider_y_start = popup_y + 30
+    slider_y_gap = 40
+
+    # Current color values
+    red, green, blue = 128, 128, 128
+
+    # Font
+    font = pygame.font.Font(None, 24)
+
+    # Create overlay surface
+    overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
+    overlay.fill(OVERLAY)
+
+    # Create popup surface
+    popup = pygame.Surface((popup_width, popup_height), pygame.SRCALPHA)
+    popup.fill((255, 255, 255, 220))  # Semi-transparent white
+
+    def draw_slider(y, value, color):
+        pygame.draw.rect(popup, BLACK, (slider_x - popup_x, y - popup_y, slider_width, slider_height), 2)
+        pygame.draw.rect(popup, color + (255,), (slider_x - popup_x, y - popup_y, int(value / 255 * slider_width), slider_height))
+
+    def get_slider_value(mouse_x, slider_x):
+        return max(0, min(255, int((mouse_x - slider_x) / slider_width * 255)))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = event.pos
+                if slider_x <= mouse_x <= slider_x + slider_width:
+                    if slider_y_start <= mouse_y <= slider_y_start + slider_height:
+                        red = get_slider_value(mouse_x, slider_x)
+                    elif slider_y_start + slider_y_gap <= mouse_y <= slider_y_start + slider_y_gap + slider_height:
+                        green = get_slider_value(mouse_x, slider_x)
+                    elif slider_y_start + 2 * slider_y_gap <= mouse_y <= slider_y_start + 2 * slider_y_gap + slider_height:
+                        blue = get_slider_value(mouse_x, slider_x)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return (red, green, blue)
+                if event.key == pygame.K_ESCAPE:
+                    return None
+
+        # Store the current screen state
+        background = screen.copy()
+
+        # Draw overlay
+        background.blit(overlay, (0, 0))
+
+        # Update popup
+        popup.fill((255, 255, 255, 220))  # Semi-transparent white
+
+        # Draw sliders
+        draw_slider(slider_y_start, red, (red, 0, 0))
+        draw_slider(slider_y_start + slider_y_gap, green, (0, green, 0))
+        draw_slider(slider_y_start + 2 * slider_y_gap, blue, (0, 0, blue))
+
+        # Draw labels
+        popup.blit(font.render(f"Red: {red}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y))
+        popup.blit(font.render(f"Green: {green}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + slider_y_gap))
+        popup.blit(font.render(f"Blue: {blue}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + 2 * slider_y_gap))
+
+        # Draw color preview
+        pygame.draw.rect(popup, (red, green, blue, 255), (slider_x - popup_x, slider_y_start - popup_y + 3 * slider_y_gap, slider_width, slider_height * 2))
+
+        # Draw instructions
+        instructions = font.render("Enter to confirm, Esc to cancel", True, BLACK)
+        popup.blit(instructions, ((popup_width - instructions.get_width()) // 2, popup_height - 30))
+
+        # Draw popup on background
+        background.blit(popup, (popup_x, popup_y))
+
+        pygame.draw.rect(background, BLACK, (popup_x - border_thickness, popup_y - border_thickness,
+                                             popup_width + 2 * border_thickness, popup_height + 2 * border_thickness),
+                         border_thickness)
+
+        # Update the screen
+        screen.blit(background, (0, 0))
+        pygame.display.flip()
+
+    return None
+
 def draw_tool_indicator():
 
     # Set up font
@@ -53,6 +154,8 @@ def draw_tool_indicator():
         text = "D"
     elif current_tool == Tool.CLOSE:
         text = "C"
+    elif current_tool == Tool.FILL:
+        text = "F"
     else:
         raise NotImplementedError
 
@@ -200,6 +303,13 @@ while running:
                         selected_spline = None
                         selected_handle_idx = None
 
+                elif current_tool == Tool.FILL:
+
+                    # TODO: only open if inside the closed curve
+
+                    color = create_color_picker_popup()
+
+                    print(color)
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
@@ -221,6 +331,11 @@ while running:
             elif event.key == pygame.K_d:
                 current_tool = Tool.DRAW
 
+                selected_spline = None
+                selected_handle_idx = None
+
+            elif event.key == pygame.K_f:
+                current_tool = Tool.FILL
                 selected_spline = None
                 selected_handle_idx = None
 
