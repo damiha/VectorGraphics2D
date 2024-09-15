@@ -1,0 +1,13 @@
+
+splines = [
+    CubicBezierSpline([
+        np.array([200, 300]),
+        np.array([400, 100]),
+        np.array([600, 200]),
+        np.array([600, 400]),
+        np.array([400, 500]),
+        np.array([300, 100]),
+        np.array([400, 100]),
+        np.array([600, 200])
+    ])
+]
