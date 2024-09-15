@@ -36,6 +36,8 @@ current_tool = Tool.TRANSLATE
 
 millis_at_last_click = None
 
+draw_points_on_bezier_curves = True
+
 def get_random_offset():
 
     random_angle = np.random.randint(angle_range[0], angle_range[1])

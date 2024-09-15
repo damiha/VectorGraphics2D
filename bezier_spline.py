@@ -53,6 +53,13 @@ class CubicBezierSpline:
 
         self.update_bezier_curves_from_points()
 
+    def get_boundary_points(self):
+        pass
+
+    def is_point_inside(self, point):
+
+        pass
+
     def get_handle_idx(self, mouse_x, mouse_y):
 
         for i, point in enumerate(self.p):
