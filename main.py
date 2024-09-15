@@ -32,6 +32,8 @@ angle_range = [20, 60]
 
 current_tool = Tool.TRANSLATE
 
+millis_at_last_click = None
+
 def get_random_offset():
 
     random_angle = np.random.randint(angle_range[0], angle_range[1])
@@ -49,6 +51,8 @@ def draw_tool_indicator():
         text = "T"
     elif current_tool == Tool.DRAW:
         text = "D"
+    elif current_tool == Tool.CLOSE:
+        text = "C"
     else:
         raise NotImplementedError
 
@@ -65,8 +69,59 @@ def draw_tool_indicator():
     # Blit the text onto the screen
     screen.blit(text_surface, text_rect)
 
-def create_new_spline():
-    pass
+def create_popup(message, font_size=32):
+
+
+    # Create a surface for the popup
+    popup_width, popup_height = 300, 200
+    popup_surface = pygame.Surface((popup_width, popup_height))
+    popup_surface.fill(GRAY)
+
+    # Create font
+    font = pygame.font.Font(None, font_size)
+
+    # Render message
+    message_surface = font.render(message, True, BLACK)
+    message_rect = message_surface.get_rect(center=(popup_width // 2, popup_height // 2 - 30))
+
+    # Create buttons
+    button_width, button_height = 80, 40
+    yes_button = pygame.Rect(popup_width // 4 - button_width // 2, popup_height - 60, button_width, button_height)
+    no_button = pygame.Rect(3 * popup_width // 4 - button_width // 2, popup_height - 60, button_width, button_height)
+
+    # Draw everything on the popup surface
+    popup_surface.blit(message_surface, message_rect)
+    pygame.draw.rect(popup_surface, GREEN, yes_button)
+    pygame.draw.rect(popup_surface, RED, no_button)
+
+    yes_text = font.render("Yes", True, BLACK)
+    no_text = font.render("No", True, BLACK)
+    popup_surface.blit(yes_text, yes_text.get_rect(center=yes_button.center))
+    popup_surface.blit(no_text, no_text.get_rect(center=no_button.center))
+
+    # Get the position to center the popup on the screen
+    screen_center = screen.get_rect().center
+    popup_pos = (screen_center[0] - popup_width // 2, screen_center[1] - popup_height // 2)
+
+    # Main loop for the popup
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                relative_mouse_pos = (mouse_pos[0] - popup_pos[0], mouse_pos[1] - popup_pos[1])
+                if yes_button.collidepoint(relative_mouse_pos):
+                    return True
+                elif no_button.collidepoint(relative_mouse_pos):
+                    return False
+
+        # Draw the popup on the main screen
+        screen.blit(popup_surface, popup_pos)
+        pygame.display.flip()
+
+    return None
 
 # Game loop
 running = True
@@ -115,16 +170,36 @@ while running:
                     else:
 
                         # just append two new points and switch to them
-                        selected_spline.p += [
+                        selected_spline.add_new_points([
                             np.array([mouse_x, mouse_y]) + offset_1,
                             np.array([mouse_x, mouse_y]) + offset_2,
                             np.array([mouse_x, mouse_y])
-                        ]
+                        ])
 
                         # select the last two handles to move them
                         selected_handle_idx = [-2, -1]
 
                         selected_spline.update_bezier_curves_from_points()
+
+                elif current_tool == Tool.CLOSE:
+
+                    found_selection = False
+
+                    for spline in splines:
+
+                        potential_handle_idx = spline.get_handle_idx(mouse_x, mouse_y)
+
+                        if potential_handle_idx is not None:
+                            found_selection = True
+                            selected_spline = spline
+                            selected_handle_idx = [potential_handle_idx]
+                            break
+
+                    # deselect currently selected because clicked in empty region
+                    if not found_selection:
+                        selected_spline = None
+                        selected_handle_idx = None
+
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
@@ -149,6 +224,25 @@ while running:
                 selected_spline = None
                 selected_handle_idx = None
 
+            elif event.key == pygame.K_c:
+
+                if current_tool != Tool.CLOSE:
+                    current_tool = Tool.CLOSE
+                    selected_spline = None
+                    selected_handle_idx = None
+
+                elif selected_spline is not None and not selected_spline.is_closed:
+
+                    answer = create_popup("Close the curve?")
+
+                    if answer:
+                        selected_spline.close()
+
+                    selected_spline = None
+                    selected_handle_idx = None
+
+                    current_tool = Tool.TRANSLATE
+
     # Drawing
     screen.fill(WHITE)
 
@@ -159,12 +253,13 @@ while running:
 
     if selected_spline is not None:
 
-        for idx in selected_handle_idx:
-            selected_spline.p[idx] += np.array([mouse_dx, mouse_dy])
+        if current_tool == Tool.TRANSLATE or current_tool == Tool.DRAW:
+            for idx in selected_handle_idx:
+                selected_spline.p[idx] += np.array([mouse_dx, mouse_dy])
 
     # Add your drawing code here
     for spline in splines:
-        spline.draw(screen)
+        spline.draw(screen, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
 
     draw_tool_indicator()
 
