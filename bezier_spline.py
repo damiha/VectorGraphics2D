@@ -44,10 +44,10 @@ class CubicBezierSpline:
 
     def close(self):
 
-        # adds one new point
-        self.add_new_points([self.p[-1] + np.array([50, 50])])
+        # adds two new points
+        self.add_new_points([self.p[-1] + np.array([50, 50]), self.p[0] + np.array([50, 50])])
 
-        self.p_indices += [ self.p_indices[1], self.p_indices[0]]
+        self.p_indices += [self.p_indices[0]]
 
         self.is_closed = True
 

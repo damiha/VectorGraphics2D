@@ -50,7 +50,7 @@ def create_color_picker_popup(screen_width = WIDTH, screen_height = HEIGHT):
     OVERLAY = (0, 0, 0, 0)
 
     # Popup properties
-    popup_width, popup_height = 300, 250
+    popup_width, popup_height = 350, 250
     popup_x = (screen_width - popup_width) // 2
     popup_y = (screen_height - popup_height) // 2
     border_thickness = 2
@@ -118,9 +118,9 @@ def create_color_picker_popup(screen_width = WIDTH, screen_height = HEIGHT):
         draw_slider(slider_y_start + 2 * slider_y_gap, blue, (0, 0, blue))
 
         # Draw labels
-        popup.blit(font.render(f"Red: {red}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y))
-        popup.blit(font.render(f"Green: {green}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + slider_y_gap))
-        popup.blit(font.render(f"Blue: {blue}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + 2 * slider_y_gap))
+        popup.blit(font.render(f"R: {red}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y))
+        popup.blit(font.render(f"G: {green}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + slider_y_gap))
+        popup.blit(font.render(f"B: {blue}", True, BLACK), (slider_x - popup_x + slider_width + 10, slider_y_start - popup_y + 2 * slider_y_gap))
 
         # Draw color preview
         pygame.draw.rect(popup, (red, green, blue, 255), (slider_x - popup_x, slider_y_start - popup_y + 3 * slider_y_gap, slider_width, slider_height * 2))
