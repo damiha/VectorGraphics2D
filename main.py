@@ -37,6 +37,7 @@ current_tool = Tool.TRANSLATE
 millis_at_last_click = None
 
 draw_points_on_bezier_curves = True
+draw_normals_on_bezier_curves = False
 
 def get_random_offset():
 
@@ -311,7 +312,17 @@ while running:
 
                     color = create_color_picker_popup()
 
-                    print(color)
+                    point = np.array([mouse_x, mouse_y])
+
+                    if color is not None:
+
+                        for spline in splines:
+
+                            if spline.is_point_inside(point):
+
+                                spline.fill_color = color
+                                break
+
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
@@ -340,6 +351,10 @@ while running:
                 current_tool = Tool.FILL
                 selected_spline = None
                 selected_handle_idx = None
+
+            elif event.key == pygame.K_n:
+                # normal drawing can be toggled with N
+                draw_normals_on_bezier_curves = not draw_normals_on_bezier_curves
 
             elif event.key == pygame.K_c:
 
@@ -377,6 +392,30 @@ while running:
     # Add your drawing code here
     for spline in splines:
         spline.draw(screen, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
+
+    for spline in splines:
+
+        if spline.fill_color is not None:
+            spline.draw_interior(screen)
+
+    if draw_points_on_bezier_curves:
+
+        all_points = []
+
+        all_normals = []
+
+        for spline in splines:
+            all_points += spline.get_boundary_points(n_samples_per_curve=10)
+
+            if draw_normals_on_bezier_curves:
+                all_normals += spline.get_normals()
+
+        for i, p in enumerate(all_points):
+            pygame.draw.circle(screen, RED, center=p, radius=4)
+
+            if draw_normals_on_bezier_curves:
+                line_length = 50
+                pygame.draw.line(screen, RED, p, p + line_length * all_normals[i])
 
     draw_tool_indicator()
 

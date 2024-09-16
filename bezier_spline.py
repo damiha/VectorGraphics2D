@@ -1,4 +1,5 @@
 from ctypes.wintypes import HANDLE
+from ssl import cert_time_to_seconds
 
 from globals import *
 from bezier import BezierCurve
@@ -21,6 +22,8 @@ class CubicBezierSpline:
         self.update_bezier_curves_from_points()
 
         self.is_closed = False
+
+        self.fill_color = None
 
     def add_new_points(self, new_points):
 
@@ -53,12 +56,85 @@ class CubicBezierSpline:
 
         self.update_bezier_curves_from_points()
 
-    def get_boundary_points(self):
-        pass
+    def get_boundary_points(self, n_samples_per_curve=10):
+
+        boundary_points = []
+
+        for bezier_curve in self.bezier_curves:
+
+            boundary_points += [bezier_curve.eval(i * (1.0 / n_samples_per_curve)) for i in range(n_samples_per_curve)]
+
+        return boundary_points
+
+    def get_center_of_curve(self):
+
+        boundary_points = self.get_boundary_points()
+
+        center_of_curve = np.array([0, 0], dtype=float)
+
+        for p in boundary_points:
+            center_of_curve += p
+
+        center_of_curve /= len(boundary_points)
+
+        return center_of_curve
+
+    def get_normals(self):
+
+        boundary_points = self.get_boundary_points()
+
+        center_of_curve = self.get_center_of_curve()
+
+        n = len(boundary_points)
+
+        normals = []
+
+        for i in range(n):
+            p1 = boundary_points[i]
+            p2 = boundary_points[(i + 1) % n]
+
+            tangent = p2 - p1
+
+            normal = np.array([-tangent[1], tangent[0]])
+
+            if np.linalg.norm(normal) == 0:
+                normals.append(np.array([0, 0]))
+                continue
+
+            normal /= np.linalg.norm(normal)
+
+            to_center = center_of_curve - p1
+
+            if np.dot(normal, to_center) > 0:
+                # that would mean center is outside?
+                normal = -normal
+
+            normals.append(normal)
+
+        return normals
+
 
     def is_point_inside(self, point):
 
-        pass
+        if not self.is_closed:
+            print("outright false")
+            return False
+
+        boundary_points = self.get_boundary_points()
+
+        normals = self.get_normals()
+
+        inside_votes = 0
+
+        for i, normal in enumerate(normals):
+
+            boundary_to_point = point - boundary_points[i]
+
+            if np.dot(boundary_to_point, normal) <= 0:
+                inside_votes += 1
+
+        # majority vote (some normals between splines cannot be trusted to point away from the interior)
+        return inside_votes > (0.8 * len(normals))
 
     def get_handle_idx(self, mouse_x, mouse_y):
 
@@ -74,3 +150,9 @@ class CubicBezierSpline:
 
         for bezier_curve in self.bezier_curves:
             bezier_curve.draw(canvas=canvas, color=color, stroke_weight=stroke_weight, n_samples=n_samples_per_segment)
+
+    def draw_interior(self, canvas, n_samples_per_segment=64):
+
+        all_points = self.get_boundary_points(n_samples_per_segment)
+
+        pygame.draw.polygon(canvas, color=self.fill_color, points=all_points)
