@@ -1,4 +1,4 @@
-
+import numpy as np
 import pygame
 
 from globals import *
@@ -44,15 +44,18 @@ class BezierCurve:
         else:
             return BLACK
 
-    def draw_handles(self, canvas, radius, color, stroke_weight):
+    def draw_handles(self, canvas, camera, radius, color, stroke_weight):
 
         for i in range(0, len(self.p) - 1, 2):
 
-            pygame.draw.circle(canvas, color=self.get_color(i), center=self.p[i], radius=radius, width=stroke_weight)
-            pygame.draw.circle(canvas, color=self.get_color(i + 1), center=self.p[i + 1], radius=radius, width=stroke_weight)
-            pygame.draw.line(canvas, color, self.p[i], self.p[i + 1], width=(stroke_weight // 2))
+            p1 = self.p[i] + np.array([-camera.camera_x, -camera.camera_y])
+            p2 = self.p[i + 1] + np.array([-camera.camera_x, -camera.camera_y])
 
-    def draw(self, canvas, color=BLACK, stroke_weight=5, n_samples=64):
+            pygame.draw.circle(canvas, color=self.get_color(i), center=p1, radius=radius, width=stroke_weight)
+            pygame.draw.circle(canvas, color=self.get_color(i + 1), center=p2, radius=radius, width=stroke_weight)
+            pygame.draw.line(canvas, color, p1, p2, width=(stroke_weight // 2))
+
+    def draw(self, canvas, camera, color=BLACK, stroke_weight=5, n_samples=64):
 
         sampled_points = []
 
@@ -61,12 +64,15 @@ class BezierCurve:
             t = (1 / n_samples) * i
             sampled_points.append(self.eval(t))
 
+        for i, p in enumerate(sampled_points):
+            sampled_points[i] = (p + np.array([-camera.camera_x, -camera.camera_y]))
+
         for i in range(n_samples - 1):
 
             pygame.draw.line(canvas, color, sampled_points[i], sampled_points[i + 1], width=stroke_weight)
 
         # draw the UI elements
-        self.draw_handles(canvas, radius=self.handle_radius, color=color, stroke_weight=stroke_weight)
+        self.draw_handles(canvas, camera, radius=self.handle_radius, color=color, stroke_weight=stroke_weight)
 
 
 

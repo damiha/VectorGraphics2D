@@ -6,6 +6,7 @@ import numpy as np
 
 from bezier import BezierCurve
 from bezier_spline import CubicBezierSpline
+from camera import Camera
 from globals import *
 
 # Initialize Pygame
@@ -38,6 +39,10 @@ millis_at_last_click = None
 
 draw_points_on_bezier_curves = True
 draw_normals_on_bezier_curves = False
+
+camera = Camera()
+
+middle_mouse_button_pressed = False
 
 def get_random_offset():
 
@@ -241,6 +246,9 @@ while running:
             mouse_x, mouse_y = event.pos
             last_mouse_x, last_mouse_y = mouse_x, mouse_y
 
+            if event.button == 2:
+                middle_mouse_button_pressed = True
+
             if event.button == 1:  # Left mouse button
 
                 if current_tool == Tool.TRANSLATE:
@@ -325,6 +333,10 @@ while running:
 
 
         elif event.type == pygame.MOUSEBUTTONUP:
+
+            if event.button == 2:
+                middle_mouse_button_pressed = False
+
             if event.button == 1:
 
                 if current_tool == Tool.TRANSLATE:
@@ -383,6 +395,11 @@ while running:
     mouse_dx = mouse_x - last_mouse_x
     mouse_dy = mouse_y - last_mouse_y
 
+    # camera movement
+    if middle_mouse_button_pressed:
+        # camera moves opposite to mouse
+        camera.move(-mouse_dx, -mouse_dy)
+
     if selected_spline is not None:
 
         if current_tool == Tool.TRANSLATE or current_tool == Tool.DRAW:
@@ -391,12 +408,12 @@ while running:
 
     # Add your drawing code here
     for spline in splines:
-        spline.draw(screen, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
+        spline.draw(screen, camera, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
 
     for spline in splines:
 
         if spline.fill_color is not None:
-            spline.draw_interior(screen)
+            spline.draw_interior(screen, camera)
 
     if draw_points_on_bezier_curves:
 
@@ -411,6 +428,9 @@ while running:
                 all_normals += spline.get_normals()
 
         for i, p in enumerate(all_points):
+
+            p = p + np.array([-camera.camera_x, -camera.camera_y])
+
             pygame.draw.circle(screen, RED, center=p, radius=4)
 
             if draw_normals_on_bezier_curves:

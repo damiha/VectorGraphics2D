@@ -146,13 +146,16 @@ class CubicBezierSpline:
 
         return None
 
-    def draw(self, canvas, color=BLACK, stroke_weight=5, n_samples_per_segment=64):
+    def draw(self, canvas, camera, color=BLACK, stroke_weight=5, n_samples_per_segment=64):
 
         for bezier_curve in self.bezier_curves:
-            bezier_curve.draw(canvas=canvas, color=color, stroke_weight=stroke_weight, n_samples=n_samples_per_segment)
+            bezier_curve.draw(camera=camera, canvas=canvas, color=color, stroke_weight=stroke_weight, n_samples=n_samples_per_segment)
 
-    def draw_interior(self, canvas, n_samples_per_segment=64):
+    def draw_interior(self, canvas, camera, n_samples_per_segment=64):
 
         all_points = self.get_boundary_points(n_samples_per_segment)
+
+        for i, p in enumerate(all_points):
+            all_points[i] = (p + np.array([-camera.camera_x, -camera.camera_y]))
 
         pygame.draw.polygon(canvas, color=self.fill_color, points=all_points)
