@@ -241,6 +241,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        elif event.type == pygame.MOUSEWHEEL:
+            # TODO: change this
+            camera.change_zoom(event.y)
+
         elif event.type == pygame.MOUSEBUTTONDOWN:
 
             mouse_x, mouse_y = event.pos

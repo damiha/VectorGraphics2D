@@ -10,5 +10,5 @@ class Camera:
         self.camera_x += dx
         self.camera_y += dy
 
-    def zoom(self, new_zoom_val):
-        raise NotImplementedError
+    def change_zoom(self, d_zoom):
+        self.zoom += d_zoom
