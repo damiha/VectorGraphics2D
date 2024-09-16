@@ -255,7 +255,7 @@ while running:
                     # select existing
                     for spline in splines:
 
-                        potential_handle_idx = spline.get_handle_idx(mouse_x, mouse_y)
+                        potential_handle_idx = spline.get_handle_idx(camera, mouse_x, mouse_y)
 
                         if potential_handle_idx is not None:
                             selected_spline = spline
@@ -301,7 +301,7 @@ while running:
 
                     for spline in splines:
 
-                        potential_handle_idx = spline.get_handle_idx(mouse_x, mouse_y)
+                        potential_handle_idx = spline.get_handle_idx(camera, mouse_x, mouse_y)
 
                         if potential_handle_idx is not None:
                             found_selection = True

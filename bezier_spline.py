@@ -136,7 +136,10 @@ class CubicBezierSpline:
         # majority vote (some normals between splines cannot be trusted to point away from the interior)
         return inside_votes > (0.8 * len(normals))
 
-    def get_handle_idx(self, mouse_x, mouse_y):
+    def get_handle_idx(self, camera, mouse_x, mouse_y):
+
+        mouse_x += camera.camera_x
+        mouse_y += camera.camera_y
 
         for i, point in enumerate(self.p):
 
