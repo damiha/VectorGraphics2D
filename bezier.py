@@ -55,7 +55,7 @@ class BezierCurve:
             pygame.draw.circle(canvas, color=self.get_color(i + 1), center=p2, radius=radius, width=stroke_weight)
             pygame.draw.line(canvas, color, p1, p2, width=(stroke_weight // 2))
 
-    def draw(self, canvas, camera, color=BLACK, stroke_weight=5, n_samples=64):
+    def draw(self, canvas, camera, is_view_mode, color=BLACK, stroke_weight=5, n_samples=64):
 
         sampled_points = []
 
@@ -72,7 +72,8 @@ class BezierCurve:
             pygame.draw.line(canvas, color, sampled_points[i], sampled_points[i + 1], width=stroke_weight)
 
         # draw the UI elements
-        self.draw_handles(canvas, camera, radius=self.handle_radius, color=color, stroke_weight=stroke_weight)
+        if not is_view_mode:
+            self.draw_handles(canvas, camera, radius=self.handle_radius, color=color, stroke_weight=stroke_weight)
 
 
 

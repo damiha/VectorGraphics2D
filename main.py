@@ -37,12 +37,43 @@ current_tool = Tool.TRANSLATE
 
 millis_at_last_click = None
 
-draw_points_on_bezier_curves = True
+draw_points_on_bezier_curves = False
 draw_normals_on_bezier_curves = False
 
 camera = Camera()
 
+is_view_mode = False
+
+show_help = False
+
 middle_mouse_button_pressed = False
+
+def draw_help():
+    font = pygame.font.Font(None, 24)  # Default font, size 24
+    text_color = (0, 0, 0)  # Black color
+    margin = 10  # Margin from the top and right edges
+    line_spacing = 5  # Space between lines
+
+    help_texts = [
+        "[T] - translate/move point",
+        "[D] - draw new curve",
+        "[C] - close curve",
+        "[F] - fill",
+        "[L] - link handles",
+        "[V] - view (hide GUI)"
+    ]
+
+    if not show_help:
+        text = font.render("[H] for help", True, text_color)
+        text_rect = text.get_rect()
+        text_rect.topright = (screen.get_width() - margin, margin)
+        screen.blit(text, text_rect)
+    else:
+        for i, help_text in enumerate(help_texts):
+            text = font.render(help_text, True, text_color)
+            text_rect = text.get_rect()
+            text_rect.topright = (screen.get_width() - margin, margin + i * (text_rect.height + line_spacing))
+            screen.blit(text, text_rect)
 
 def get_random_offset():
 
@@ -408,6 +439,12 @@ while running:
                 # normal drawing can be toggled with N
                 draw_normals_on_bezier_curves = not draw_normals_on_bezier_curves
 
+            elif event.key == pygame.K_v:
+                is_view_mode = not is_view_mode
+
+            elif event.key == pygame.K_h:
+                show_help = not show_help
+
             elif event.key == pygame.K_l:
 
                 if current_tool != Tool.LINK:
@@ -422,9 +459,11 @@ while running:
 
                     if link_with is not None:
 
-                        # TODO: show popup window
-                        selected_spline.link((selected_handle_idx[0], link_with))
-                        selected_spline.link((link_with, selected_handle_idx[0]))
+                        answer = create_popup("Create a Link?")
+
+                        if answer:
+                            selected_spline.link((selected_handle_idx[0], link_with))
+                            selected_spline.link((link_with, selected_handle_idx[0]))
 
                     selected_spline = None
                     selected_handle_idx = None
@@ -474,7 +513,7 @@ while running:
 
     # Add your drawing code here
     for spline in splines:
-        spline.draw(screen, camera, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
+        spline.draw(screen, camera, is_view_mode, color=(BRIGHT_ORANGE if current_tool == Tool.CLOSE and spline == selected_spline else BLACK))
 
     for spline in splines:
 
@@ -504,6 +543,8 @@ while running:
                 pygame.draw.line(screen, RED, p, p + line_length * all_normals[i])
 
     draw_tool_indicator()
+
+    draw_help()
 
     # Update the display
     pygame.display.flip()

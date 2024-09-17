@@ -198,10 +198,10 @@ class CubicBezierSpline:
 
         self.update_bezier_curves_from_points()
 
-    def draw(self, canvas, camera, color=BLACK, stroke_weight=5, n_samples_per_segment=64):
+    def draw(self, canvas, camera, is_view_mode, color=BLACK, stroke_weight=5, n_samples_per_segment=64):
 
         for bezier_curve in self.bezier_curves:
-            bezier_curve.draw(camera=camera, canvas=canvas, color=color, stroke_weight=stroke_weight, n_samples=n_samples_per_segment)
+            bezier_curve.draw(camera=camera, canvas=canvas, is_view_mode=is_view_mode, color=color, stroke_weight=stroke_weight, n_samples=n_samples_per_segment)
 
     def draw_interior(self, canvas, camera, n_samples_per_segment=64):
 
