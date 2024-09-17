@@ -18,6 +18,8 @@ is no layer system like in Photoshop or Gimp.
 
 ### Demo
 
+#### (the video takes a few seconds to load)
+
 ![Video Description](assets/demo%20vector%20graphics.GIF)
 
 **NOTE**: The weird yellow color effect is a result of converting the
