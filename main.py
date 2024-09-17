@@ -267,7 +267,16 @@ while running:
 
                         if potential_handle_idx is not None:
                             selected_spline = spline
+
                             selected_handle_idx = [potential_handle_idx]
+
+                            # if we have selected a knot, transform two handles left and right as well
+                            if potential_handle_idx % 3 == 0:
+                                if potential_handle_idx > 0 or spline.is_closed:
+                                    selected_handle_idx.append(potential_handle_idx - 1)
+
+                                if potential_handle_idx < len(spline.p) - 1:
+                                    selected_handle_idx.append(potential_handle_idx + 1)
                             break
 
                 elif current_tool == Tool.DRAW:
