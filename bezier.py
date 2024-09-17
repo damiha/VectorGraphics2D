@@ -48,8 +48,8 @@ class BezierCurve:
 
         for i in range(0, len(self.p) - 1, 2):
 
-            p1 = self.p[i] + np.array([-camera.camera_x, -camera.camera_y])
-            p2 = self.p[i + 1] + np.array([-camera.camera_x, -camera.camera_y])
+            p1 = camera.transform_point(self.p[i])
+            p2 = camera.transform_point(self.p[i + 1])
 
             pygame.draw.circle(canvas, color=self.get_color(i), center=p1, radius=radius, width=stroke_weight)
             pygame.draw.circle(canvas, color=self.get_color(i + 1), center=p2, radius=radius, width=stroke_weight)
@@ -65,7 +65,7 @@ class BezierCurve:
             sampled_points.append(self.eval(t))
 
         for i, p in enumerate(sampled_points):
-            sampled_points[i] = (p + np.array([-camera.camera_x, -camera.camera_y]))
+            sampled_points[i] = camera.transform_point(p)
 
         for i in range(n_samples - 1):
 

@@ -249,6 +249,9 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
 
             mouse_x, mouse_y = event.pos
+            mouse_x = mouse_x * 1.0
+            mouse_y = mouse_y * 1.0
+
             last_mouse_x, last_mouse_y = mouse_x, mouse_y
 
             if event.button == 2:
@@ -272,13 +275,15 @@ while running:
                     offset_1 = get_random_offset()
                     offset_2 = get_random_offset()
 
+                    mouse_pos_in_world = camera.inverse_transform_point(np.array([mouse_x, mouse_y]))
+
                     if selected_spline is None:
 
                         new_spline = CubicBezierSpline([
-                            np.array([mouse_x, mouse_y]), # position just clicked
-                            np.array([mouse_x, mouse_y]) + offset_1, # another handle for position just clicked
-                            np.array([mouse_x, mouse_y]) + offset_2,  # position just clicked
-                            np.array([mouse_x, mouse_y])
+                            np.copy(mouse_pos_in_world), # position just clicked
+                            np.copy(mouse_pos_in_world) + offset_1, # another handle for position just clicked
+                            np.copy(mouse_pos_in_world) + offset_2,  # position just clicked
+                            np.copy(mouse_pos_in_world)
                         ])
 
                         selected_spline = new_spline
@@ -290,9 +295,9 @@ while running:
 
                         # just append two new points and switch to them
                         selected_spline.add_new_points([
-                            np.array([mouse_x, mouse_y]) + offset_1,
-                            np.array([mouse_x, mouse_y]) + offset_2,
-                            np.array([mouse_x, mouse_y])
+                            np.copy(mouse_pos_in_world) + offset_1,
+                            np.copy(mouse_pos_in_world) + offset_2,
+                            np.copy(mouse_pos_in_world)
                         ])
 
                         # select the last two handles to move them
@@ -325,13 +330,13 @@ while running:
 
                     color = create_color_picker_popup()
 
-                    point = np.array([mouse_x, mouse_y])
+                    mouse_point_in_world = camera.inverse_transform_point(np.array([mouse_x, mouse_y]))
 
                     if color is not None:
 
                         for spline in splines:
 
-                            if spline.is_point_inside(point):
+                            if spline.is_point_inside(mouse_point_in_world):
 
                                 spline.fill_color = color
                                 break
@@ -409,7 +414,7 @@ while running:
 
         if current_tool == Tool.TRANSLATE or current_tool == Tool.DRAW:
             for idx in selected_handle_idx:
-                selected_spline.p[idx] += np.array([mouse_dx, mouse_dy])
+                selected_spline.p[idx] += camera.transform_change(np.array([mouse_dx, mouse_dy], dtype=float))
 
     # Add your drawing code here
     for spline in splines:
@@ -434,7 +439,7 @@ while running:
 
         for i, p in enumerate(all_points):
 
-            p = p + np.array([-camera.camera_x, -camera.camera_y])
+            p = camera.transform_point(p)
 
             pygame.draw.circle(screen, RED, center=p, radius=4)
 

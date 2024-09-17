@@ -117,7 +117,6 @@ class CubicBezierSpline:
     def is_point_inside(self, point):
 
         if not self.is_closed:
-            print("outright false")
             return False
 
         boundary_points = self.get_boundary_points()
@@ -138,12 +137,12 @@ class CubicBezierSpline:
 
     def get_handle_idx(self, camera, mouse_x, mouse_y):
 
-        mouse_x += camera.camera_x
-        mouse_y += camera.camera_y
+        # don't move mouse, move points to mouse
+        mouse_point = np.array([mouse_x, mouse_y])
 
         for i, point in enumerate(self.p):
 
-            if np.linalg.norm(point - np.array([mouse_x, mouse_y])) < self.handle_radius:
+            if np.linalg.norm(camera.transform_point(point) - mouse_point) < self.handle_radius:
 
                 return i
 
@@ -159,6 +158,6 @@ class CubicBezierSpline:
         all_points = self.get_boundary_points(n_samples_per_segment)
 
         for i, p in enumerate(all_points):
-            all_points[i] = (p + np.array([-camera.camera_x, -camera.camera_y]))
+            all_points[i] = camera.transform_point(p)
 
         pygame.draw.polygon(canvas, color=self.fill_color, points=all_points)
