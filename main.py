@@ -164,6 +164,8 @@ def draw_tool_indicator():
         text = "C"
     elif current_tool == Tool.FILL:
         text = "F"
+    elif current_tool == Tool.LINK:
+        text = "L"
     else:
         raise NotImplementedError
 
@@ -333,6 +335,25 @@ while running:
                         selected_spline = None
                         selected_handle_idx = None
 
+                elif current_tool == Tool.LINK:
+
+                    found_selection = False
+
+                    for spline in splines:
+
+                        potential_handle_idx = spline.get_handle_idx(camera, mouse_x, mouse_y)
+
+                        if potential_handle_idx is not None:
+                            found_selection = True
+                            selected_spline = spline
+                            selected_handle_idx = [potential_handle_idx]
+                            break
+
+                    # deselect currently selected because clicked in empty region
+                    if not found_selection:
+                        selected_spline = None
+                        selected_handle_idx = None
+
                 elif current_tool == Tool.FILL:
 
                     # TODO: only open if inside the closed curve
@@ -387,6 +408,29 @@ while running:
                 # normal drawing can be toggled with N
                 draw_normals_on_bezier_curves = not draw_normals_on_bezier_curves
 
+            elif event.key == pygame.K_l:
+
+                if current_tool != Tool.LINK:
+                    current_tool = Tool.LINK
+                    selected_spline = None
+                    selected_handle_idx = None
+
+                elif selected_spline is not None and selected_spline.belongs_to_handle(selected_handle_idx[0]):
+
+                    # link up the two handles
+                    link_with = selected_spline.find_neighboring_handle(selected_handle_idx[0])
+
+                    if link_with is not None:
+
+                        # TODO: show popup window
+                        selected_spline.link((selected_handle_idx[0], link_with))
+                        selected_spline.link((link_with, selected_handle_idx[0]))
+
+                    selected_spline = None
+                    selected_handle_idx = None
+
+                    current_tool = Tool.TRANSLATE
+
             elif event.key == pygame.K_c:
 
                 if current_tool != Tool.CLOSE:
@@ -424,6 +468,9 @@ while running:
         if current_tool == Tool.TRANSLATE or current_tool == Tool.DRAW:
             for idx in selected_handle_idx:
                 selected_spline.p[idx] += camera.transform_change(np.array([mouse_dx, mouse_dy], dtype=float))
+
+    for spline in splines:
+        spline.enforce_links(selected=(None if selected_spline is None else selected_handle_idx[0]))
 
     # Add your drawing code here
     for spline in splines:

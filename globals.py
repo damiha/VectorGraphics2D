@@ -22,3 +22,4 @@ class Tool(Enum):
     DRAW = 2
     CLOSE = 3
     FILL = 4
+    LINK = 5

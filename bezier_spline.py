@@ -25,6 +25,38 @@ class CubicBezierSpline:
 
         self.fill_color = None
 
+        # links to ensure C1 continuity at certain points (user defined)
+        # those are tuples
+        self.links = []
+
+    def find_neighboring_handle(self, handle_idx):
+
+        # we know its not 0 (knot) so it must be 1 or 2 mod 3
+        if handle_idx % 3 == 1:
+            # first handle -> get left
+            if handle_idx > 3:
+                return handle_idx - 2
+
+            elif handle_idx == 1 and self.is_closed:
+                return -1
+
+        elif handle_idx % 3 == 2:
+
+            if handle_idx < len(self.p) - 2:
+                return handle_idx + 2
+
+            elif handle_idx == len(self.p) - 2 and self.is_closed:
+                return 0
+
+        return None
+
+    def belongs_to_handle(self, handle_idx):
+        return handle_idx % 3 != 0
+
+    # expects a tuple
+    def link(self, link):
+        self.links.append(link)
+
     def add_new_points(self, new_points):
 
         # extend the number of indices as well
@@ -147,6 +179,24 @@ class CubicBezierSpline:
                 return i
 
         return None
+
+    def enforce_links(self, selected):
+
+        for (link_source, link_target) in self.links:
+
+            # skip because currently moved
+            if selected is not None and selected == link_target:
+                continue
+
+            knot_inbetween = int((link_target + link_source) / 2)
+
+            origin_mirror = self.p[knot_inbetween]
+
+            to_mirror = origin_mirror - self.p[link_source]
+
+            self.p[link_target] = origin_mirror + to_mirror
+
+        self.update_bezier_curves_from_points()
 
     def draw(self, canvas, camera, color=BLACK, stroke_weight=5, n_samples_per_segment=64):
 
